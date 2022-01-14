@@ -1235,6 +1235,14 @@ arr.forEach(function(value,key,iterable){
 
 和服务器通信时，记录下时间差（服务端时间 - 本地时间）不管正负，这样每当接收到消息或者发送消息的时候，**就拿本地时间和时间差相加**。这样就保证了和服务端时间一致。
 
+# attribute和property的区别
+
+写HTML源代码时，可以在HTML元素上定义属性(attribute) 。
+
+ 然后，一旦浏览器解析了您的代码，就会创建一个对应的DOM节点。 该节点是一个对象，因此具有属性 (property)。
+
+最后总的来讲就是 **HTML属性** (attribute)和 **DOM属性**(property)，是相互关联的。多数情况`attribute`值仅用作初始DOM节点对象使用，而`property`更多用于页面交互，很多框架都是在与元素和指令的 `property`和事件打交道。
+
 # 数组的拷贝
 
 - 浅拷贝：如果数组元素是基本类型，就会拷贝一份，互不影响，而如果是对象或者数组，就会只拷贝对象和数组的引用，无论对新旧数组的哪一个进行了修改，两者都会发生变化。
@@ -1297,7 +1305,7 @@ reduce()方法接收一个函数作为累加器，数组中的每个值（从左
 
 **reduce 为数组中的每一个元素依次执行回调函数**
 
-```
+```js
 array.reduce(function(total, currentValue, currentIndex, arr), initialValue)
 ```
 
@@ -1595,6 +1603,24 @@ points.sort(function(a,b){return a-b});
 console.log(points);
 // [1,5,10,25,40,100]
 ```
+
+# String
+
+## trim（不改变）
+
+用于删除字符串的头尾空白符
+
+空白符包括：空格、制表符tab、换行符等
+
+**注意：**方法不会改变原始字符串。 方法不适用于 null, undefined, Number 类型。
+
+```js
+var str = "    trim    ";
+console.log(str.trim());
+// trim
+```
+
+
 
 # Date
 

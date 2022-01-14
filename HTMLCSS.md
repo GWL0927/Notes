@@ -337,6 +337,108 @@ a:link -> a:visited -> a:hover -> a:active
 - :enabled :disabled 表单控件的禁用状态。
 - :checked 单选框或复选框被选中。
 
+# 伪类和伪元素
+
+**伪类**：存在DOM文档中，用于向某些选择器添加特殊的效果
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190527175840224.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzI3Njc0NDM5,size_16,color_FFFFFF,t_70)
+
+**伪元素**：不存在DOM文档中，是虚拟的元素，用于将特殊的效果添加到某些选择器
+
+```html
+<p>wonyun!</p>
+<style>
+    p:before{content: "hello "}
+    p:after{content: "you are handsome!"}
+</style>
+```
+
+上面例子从技术角度看，等价于下面的html结构：
+
+```html
+<p>
+    <span>hello </span>
+    wonyun!
+    <span> you are handsome!</span>
+</p>
+```
+
+由此可知：**伪元素:before和:after添加的内容默认是`inline`元素**；
+
+这个两个伪元素的`content`属性，表示伪元素的内容,设置:before和:after时必须设置其`content`属性，否则伪元素就不起作用
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/2019052717580919.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzI3Njc0NDM5,size_16,color_FFFFFF,t_70)
+
+# [DOMContentLoaded和load的区别](https://www.cnblogs.com/gg-qq/p/11327972.html)
+
+## DOMContentLoaded
+
+当初始的 HTML 文档被完全加载和解析完成之后，DOMContentLoaded 事件被触发，而无需等待样式表、图像和子框架的完成加载。
+
+### 动态更新根字体大小
+
+```js
+const MAX_FONT_SIZE = 420
+
+// 定义最大的屏幕宽度
+document.addEventListener('DOMContentLoaded', () => {
+  const html = document.querySelector('html')
+  let fontSize = window.innerWidth / 10
+  fontSize = fontSize > MAX_FONT_SIZE ? MAX_FONT_SIZE : fontSize
+  html.style.fontSize = fontSize + 'px'
+})
+```
+
+## load
+
+load 仅用于检测一个完全加载的页面，页面的html、css、js、图片等资源都已经加载完之后才会触发 load 事件。
+
+# 实现物理像素1px(CSS像素0.5px)
+
+像素（pixel）：指在由一个数字序列表示的图像中的一个最小单元，单位是 px，不可再次分割了。
+
+设备像素比（DPR）: 设备像素比 = 设备像素 / 设备独立像素 = 物理像素 / 逻辑像素。
+
+- CSS像素（虚拟像素）：CSS样式代码中使用的逻辑像素，px是相对设备的像素。
+- 设备像素（物理像素）：设备能控制显示的最小单位，显示器上一个个的点。
+- 设备独立像素（逻辑像素）：计算机坐标系统中的一个点，这个点代表一个可以由程序使用的虚拟像素(比如：CSS像素)，由相关系统转换为物理像素
+
+**在DPR为 2 的设备上，逻辑像素为 1pt 时，物理像素为 2px**
+
+在设计稿上显示的是物理像素 750✖️1334，而在CSS中是逻辑像素应该为 375✖️667。
+
+> 那么此时设计稿上的 1px 宽度实际代表的CSS逻辑像素是 0.5px，对应物理像素 1px，要怎么实现？
+
+```html
+<div class="cell border-1px">cell</div>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+  .cell {
+    /* width: 100px;
+    height: 100px;
+    border: 1px solid #000; */
+  }
+  .border-1px::after {
+    content: '';
+    position: absolute;
+    box-sizing: border-box;
+    /* top: 0;
+    left: 0; */
+    width: 200px;
+    height: 200px;
+    border: 1px solid #000;
+    border-radius: 4px;
+    transform: scale(0.5);
+    transform-origin: top left;
+  }
+</style>
+```
+
+
+
 # em和rem
 
 **em**是相对父元素的单位。相对于当前对象内文本的字体尺寸。如当前对行内文本的字体尺寸未被人为设置，则相对于浏览器的默认字体尺寸。

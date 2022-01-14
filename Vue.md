@@ -27,6 +27,15 @@ git pull相当于git fetch 和git merge，即更新远程仓库的代码到本�
 ## git常用命令
 
 ```json
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M master
+git remote add origin https://github.com/GWL0927/Notes.git
+git push -u origin master
+```
+
+```json
 1）从远程库中克隆项目
 git clone 项目地址
 

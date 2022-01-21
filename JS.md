@@ -892,13 +892,13 @@ Event Loop 就是为了确保 异步代码 可以在 同步代码 执行后继�
 1. script（可以理解为外层同步代码）
 2. setTimeout/setInterval
 3. UI rendering/UI事件
-4. postMessage，MessageChannel
+4. I/O
 5. setImmediate
 
 **微任务**，由JS引擎发起，不会触发新一轮Tick
 
 1. Promise
-2. MutationObserver
+2. MutationObserver 用来监视 DOM 变动。DOM 的任何变动，比如节点的增减、属性的变动、文本内容的变动，这个 API 都可以得到通知。
 3. Object.observe（已废弃，Proxy对象替代）
 4. process.nextTick（Node.js)
 

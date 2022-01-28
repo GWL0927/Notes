@@ -756,6 +756,8 @@ A.vue、B.vue、C.vue 其中 C是B的子组件，B是A的子组件
 
 `ref`：如果在普通的 DOM 元素上使用，引用指向的就是 DOM 元素；如果用在子组件上，引用就指向组件实例，可以通过实例直接调用组件的方法或访问数据， 我们看一个`ref` 来访问组件的例子
 
+**`$refs` 只会在组件渲染完成之后生效，并且它们不是响应式的。**
+
 ```vue
 // 子组件 A.vue
 <script>
@@ -1514,42 +1516,235 @@ methods: {
 }
 ```
 
-## vuex有哪几种属性
+## state
 
-有五种,分别是State , Getter , Mutation , Action , Module (就是mapAction)
+vuex的基本数据，用来存储变量
 
-1. state：vuex的基本数据，用来存储变量
+## getters
 
-2. getter：从基本数据(state)派生的数据，相当于state的计算属性
+从基本数据(state)派生的数据，相当于state的计算属性，Getter 会暴露为 `store.getters` 对象
 
-   Getter 会暴露为 `store.getters` 对象，你可以以属性的形式访问这些值：
+- 以属性的形式访问：
 
-   ```js
-   store.getters.doneTodos // -> [{ id: 1, text: '...', done: true }]
-   ```
+  ```js
+  store.getters.doneTodos // -> [{ id: 1, text: '...', done: true }]
+  ```
 
-3. mutation：提交更新数据的方法，必须是同步的(如果需要异步使用action)。每个mutation 都有一个字符串的 事件类型 (type) 和 一个 回调函数 (handler)。回调函数就是我们实际进行状态更改的地方，并且它会接受 state 作为第一个参数，提交载荷作为第二个参数。
+  **getter 在通过属性访问时是作为 Vue 的响应式系统的一部分缓存其中的**
 
-   你可以向 `store.commit` 传入额外的参数，即 mutation 的 **载荷（payload）**：
+- 通过方法访问：
 
-   ```js
-   // ...
-   mutations: {
-     increment (state, n) {
-       state.count += n
-     }
-   }
-   ```
+  你也可以通过让 getter 返回一个函数，来实现给 getter 传参。在你对 store 里的数组进行查询时非常有用。
 
-   ```js
-   store.commit('increment', 10)
-   ```
+  ```js
+  getters: {
+    // ...
+    getTodoById: (state) => (id) => {
+      return state.todos.find(todo => todo.id === id)
+    }
+  }
+  store.getters.getTodoById(2) // -> { id: 2, text: '...', done: false }
+  ```
 
-4. action：和mutation的功能大致相同，不同之处在于 ==》1. Action 提交的是 mutation，而不是直接变更状态。 2. Action 可以包含任意异步操作。
+  注意，**getter 在通过方法访问时，每次都会去进行调用，而不会缓存结果**。
 
-   Action 通过 `store.dispatch` 方法触发
+state和getters的辅助函数，在组件中使用:
 
-5. modules：模块化vuex，可以让每一个模块拥有自己的state、mutation、action、getters,使得结构非常清晰，方便管理。
+```js
+import { mapState, mapGetters } from 'vuex'
+computed: {
+  ...mapState({ // mapState 辅助函数帮助我们生成计算属性
+    countAlias: 'count',
+  }),
+  ...mapGetters({ // mapGetters 辅助函数仅仅是将 store 中的 getter 映射到局部计算属性
+    thisDoneCount: 'doneTodosCount'
+  })
+}
+```
+
+## mutations
+
+**提交更新数据的方法，必须是同步的(**如果需要异步使用action)。每个mutation 都有一个字符串的 事件类型 (type) 和 一个 回调函数 (handler)。回调函数就是我们实际进行状态更改的地方，并且它会接受 state 作为第一个参数，提交载荷作为第二个参数。
+
+你可以向 `store.commit` 传入额外的参数，即 mutation 的 **载荷（payload）**：
+
+**在大多数情况下，载荷应该是一个对象（也可以是一个参数）**，这样可以包含多个字段并且记录的 mutation 会更易读：
+
+```js
+// ...
+mutations: {
+  increment (state, payload) {
+    state.count += payload.amount
+  }
+}
+```
+
+```js
+store.commit('increment', {
+  amount: 10
+})
+```
+
+mutations的辅助函数，在组件中提交Mutation
+
+```js
+import { mapMutations } from 'vuex'
+export default {
+  // ...
+  methods: {
+    ...mapMutations([
+      'increment', // 将 `this.increment()` 映射为 `this.$store.commit('increment')`
+
+      // `mapMutations` 也支持载荷：
+      'incrementBy' // 将 `this.incrementBy(amount)` 映射为 `this.$store.commit('incrementBy', amount)`
+    ]),
+    ...mapMutations({
+      add: 'increment' // 将 `this.add()` 映射为 `this.$store.commit('increment')`
+    })
+  }
+}
+```
+
+## action
+
+和mutation的功能大致相同，不同之处在于：1. Action 提交的是 mutation，而不是直接变更状态。 2. Action 可以包含任意异步操作。
+
+Action 通过 `store.dispatch` 方法触发：
+
+```js
+store.dispatch('increment')
+```
+
+我们可以在 action 内部执行**异步**操作：
+
+```js
+actions: {
+  incrementAsync ({ commit }, payload) {
+    setTimeout(() => {
+      commit('increment', {
+        amount: payload.amountAsync
+      })
+    }, 1000)
+  }
+}
+```
+
+Actions 支持同样的载荷方式和对象方式进行分发：
+
+```js
+// 以载荷形式分发
+store.dispatch('incrementAsync', {
+  amountAsync: 10
+})
+
+// 以对象形式分发
+store.dispatch({
+  type: 'incrementAsync',
+  amountAsync: 10
+})
+```
+
+在组件中分发 Action
+
+你在组件中使用 `this.$store.dispatch('xxx')` 分发 action，或者使用 `mapActions` 辅助函数将组件的 methods 映射为 `store.dispatch` 调用（需要先在根节点注入 `store`）：
+
+```js
+import { mapActions } from 'vuex'
+
+export default {
+  // ...
+  methods: {
+    ...mapActions([
+      'increment', // 将 `this.increment()` 映射为 `this.$store.dispatch('increment')`
+
+      // `mapActions` 也支持载荷：
+      'incrementBy' // 将 `this.incrementBy(amount)` 映射为 `this.$store.dispatch('incrementBy', amount)`
+    ]),
+    ...mapActions({
+      add: 'increment' // 将 `this.add()` 映射为 `this.$store.dispatch('increment')`
+    })
+  }
+}
+```
+
+## modules
+
+模块化vuex，可以让每一个模块拥有自己的state、mutation、action、getters,使得结构非常清晰，方便管理。
+
+对于模块内部的 action，局部状态通过 `context.state` 暴露出来，根节点状态则为 `context.rootState`：
+
+```js
+const moduleA = {
+  // ...
+  actions: {
+    incrementIfOddOnRootSum ({ state, commit, rootState }) {
+      if ((state.count + rootState.count) % 2 === 1) {
+        commit('increment')
+      }
+    }
+  }
+}
+```
+
+对于模块内部的 getter，根节点状态会作为第三个参数暴露出来：
+
+```js
+const moduleA = {
+  // ...
+  getters: {
+    sumWithRootCount (state, getters, rootState) {
+      return state.count + rootState.count
+    }
+  }
+}
+```
+
+### 命名空间
+
+默认情况下，模块内部的 action、mutation 和 getter 是注册在**全局命名空间**的——这样使得多个模块能够对同一 mutation 或 action 作出响应。
+
+如果希望你的模块具有更高的封装度和复用性，你可以通过添加 `namespaced: true` 的方式使其成为带命名空间的模块。当模块被注册后，它的所有 getter、action 及 mutation 都会自动根据模块注册的路径调整命名。
+
+```js
+const store = new Vuex.Store({
+  modules: {
+    account: {
+      namespaced: true,
+
+      // 模块内容（module assets）
+      state: () => ({ ... }), // 模块内的状态已经是嵌套的了，使用 `namespaced` 属性不会对其产生影响
+      getters: {
+        isAdmin () { ... } // -> getters['account/isAdmin']
+      },
+      actions: {
+        login () { ... } // -> dispatch('account/login')
+      },
+      mutations: {
+        login () { ... } // -> commit('account/login')
+      },
+
+      // 嵌套模块
+      modules: {
+        // 继承父模块的命名空间
+        myPage: {
+          state: () => ({ ... }),
+          getters: {
+            profile () { ... } // -> getters['account/profile']
+          }
+        },
+        // 进一步嵌套命名空间
+        posts: {
+          namespaced: true,
+          state: () => ({ ... }),
+          getters: {
+            popular () { ... } // -> getters['account/posts/popular']
+          }
+        }
+      }
+    }
+  }
+})
+```
 
 # Vue Router原理
 
